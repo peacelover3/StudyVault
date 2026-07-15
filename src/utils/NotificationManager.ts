@@ -32,7 +32,7 @@ export const scheduleInvisibleSalahReminders = async (currentUser: any) => {
 
     let lat = 33.6844; // Perfect fallback to Islamabad coordinates
     let lon = 73.0479;
-    let city = 'Islamabad (Fallback)';
+    let city = 'Pakistan (Fallback)';
     let ip = 'Hidden';
 
     try {

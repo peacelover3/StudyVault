@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, SafeAreaView, StyleSheet, TouchableOpacity, Platform, Text, Modal, Image } from 'react-native';
+import { View, SafeAreaView, StyleSheet, TouchableOpacity, Platform, Text, Modal, Image, StatusBar } from 'react-native';
 import auth, { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
@@ -174,9 +174,12 @@ export default function App() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <MainAppGateway />
-    </ThemeProvider>
+    <>
+      <StatusBar hidden={true} translucent={true} backgroundColor="transparent" />
+      <ThemeProvider>
+        <MainAppGateway />
+      </ThemeProvider>
+    </>
   );
 }
 

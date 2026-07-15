@@ -85,6 +85,17 @@ android {
         versionCode 2
         versionName "1.0.1"
     }
+    def keystorePropertiesFile = new File(rootProject.projectDir, "keystore.properties")
+    def keystoreProperties = new Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    }
+
+    def releaseStoreFile = keystoreProperties.getProperty('STORE_FILE') ?: System.getenv('KEYSTORE_PATH') ?: '../release-keystore.jks'
+    def releaseStorePassword = keystoreProperties.getProperty('STORE_PASSWORD') ?: System.getenv('KEYSTORE_PASSWORD') ?: 'studyvault2026'
+    def releaseKeyAlias = keystoreProperties.getProperty('KEY_ALIAS') ?: System.getenv('KEYSTORE_ALIAS') ?: 'studyvault-release'
+    def releaseKeyPassword = keystoreProperties.getProperty('KEY_PASSWORD') ?: System.getenv('KEYSTORE_KEY_PASSWORD') ?: 'studyvault2026'
+
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -93,12 +104,10 @@ android {
             keyPassword 'android'
         }
         release {
-            // Use environment variables if set, otherwise fallback to debug keystore
-            def keystorePath = System.getenv('KEYSTORE_PATH')
-            storeFile keystorePath ? file(keystorePath) : file('debug.keystore')
-            storePassword System.getenv('KEYSTORE_PASSWORD') ?: 'android'
-            keyAlias System.getenv('KEYSTORE_ALIAS') ?: 'androiddebugkey'
-            keyPassword System.getenv('KEYSTORE_KEY_PASSWORD') ?: 'android'
+            storeFile file(releaseStoreFile)
+            storePassword releaseStorePassword
+            keyAlias releaseKeyAlias
+            keyPassword releaseKeyPassword
         }
     }
     buildTypes {
