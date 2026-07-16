@@ -1,3 +1,5 @@
+# This is free, so take it anyone
+i've left the idea.
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
