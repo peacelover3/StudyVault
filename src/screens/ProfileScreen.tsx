@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { AppState, AppStateStatus, View, Text, TouchableOpacity, TextInput, Image, Alert, StyleSheet, ScrollView, Modal, Platform, Linking, FlatList, Animated } from 'react-native';
-import auth from '@react-native-firebase/auth'; 
-import { GoogleSignin } from '@react-native-google-signin/google-signin'; 
-import firestore from '@react-native-firebase/firestore'; 
+import { AppState, AppStateStatus, View, Text, TouchableOpacity, TextInput, Image, Alert, StyleSheet, ScrollView, Modal, Platform, Linking, Animated } from 'react-native';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import { useTheme, BgStyle } from '../context/ThemeContext';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { uploadImageToImgbb } from '../utils/imbbUploader';
@@ -43,8 +42,6 @@ export const ProfileScreen = () => {
   ];
 
   const currentUser = auth().currentUser;
-  const isGuest = !currentUser || currentUser.isAnonymous;
-  const userEmail = isGuest ? 'Guest Identity Active' : (currentUser?.email || 'No link verified');
 
   const tryPendingUpload = async () => {
     const pending = await getPendingProfileUpload();
@@ -119,76 +116,16 @@ export const ProfileScreen = () => {
     }
   };
 
-  const handleLinkAccount = async () => {
-    try {
-      // Save current anonymous user's uid and data
-      const anonUid = currentUser?.uid;
-      let anonData: any = {};
-      
-      if (anonUid) {
-        try {
-          const anonDoc = await firestore().collection('users').doc(anonUid).get();
-          if (anonDoc.exists) {
-            anonData = anonDoc.data() || {};
-          }
-        } catch (e) { 
-          console.warn("Couldn't fetch anonymous user data, continuing:", e); 
-        }
-      }
-
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      const idToken = userInfo.data?.idToken;
-      
-      if (idToken) {
-        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-        const firebaseUserCredential = await auth().signInWithCredential(googleCredential);
-        const newUid = firebaseUserCredential.user.uid;
-        
-        // Merge anonymous data with authenticated user document (Google data takes priority)
-        const userData = {
-          ...anonData,
-          email: firebaseUserCredential.user.email,
-          lastSyncedAt: new Date().toISOString()
-        };
-
-        // Set merged data to new authenticated user document
-        try {
-          await firestore().collection('users').doc(newUid).set(userData, { merge: true });
-        } catch (e) { 
-          console.warn("Couldn't save user data immediately, will sync later:", e); 
-        }
-
-        // Clean up anonymous user document (non-critical, don't fail on this)
-        if (anonUid && anonUid !== newUid) {
-          try {
-            await firestore().collection('users').doc(anonUid).delete();
-          } catch (e) { 
-            console.warn("Cleanup pending:", e); 
-          }
-        }
-
-        Alert.alert("Success!", "Google account verified and linked securely.");
-        setShowSettings(false);
-      }
-    } catch (error: any) {
-      if (error.code === GoogleSignin.SIGN_IN_CANCELLED) {
-        Alert.alert("Cancelled", "Sign-in was cancelled.");
-      } else if (error.code === GoogleSignin.IN_PROGRESS) {
-        Alert.alert("In Progress", "Sign-in is already in progress.");
-      } else {
-        Alert.alert("Error", error.message || "Failed to link account. Please try again.");
-      }
-    }
-  };
-
-  const handleLogoutAndReset = async () => {
+  const handleClearUserData = async () => {
     try {
       setShowSettings(false);
-      if (auth().currentUser) await auth().signOut();
-      try { await GoogleSignin.signOut(); } catch (gErr) {}
+      await clearPendingProfileUpload();
       await resetAllData();
-    } catch (error) { console.error(error); }
+      Alert.alert('Cleared', 'Your local app data has been cleared.');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Could not clear your local data.');
+    }
   };
 
   //  GEMINI CODE 
@@ -256,7 +193,7 @@ const NSTC = () => {
               </TouchableOpacity>
             </View>
           )}
-          <Text style={[styles.subTitle, { color: theme.textMuted }]}>{userEmail}</Text>
+          <Text style={[styles.subTitle, { color: theme.textMuted }]}>{studentName || 'Set your name in onboarding'}</Text>
         </View>
 
         {/* Master Active Status Control Widget */}
@@ -300,31 +237,27 @@ const NSTC = () => {
 
             <ScrollView contentContainerStyle={styles.modalScrollStack} showsVerticalScrollIndicator={false}>
               
-              {/* Conditional Auth Gateway Module */}
-              {isGuest ? (
-                <View style={[styles.settingBlock, { backgroundColor: theme.bg, borderColor: theme.accent }]}>
-                  <View style={styles.settingHeader}>
-                    <Text style={{ fontSize: 16 }}>🔒</Text>
-                    <Text style={[styles.settingText, { color: theme.text }]}>Guest Mode Core</Text>
-                  </View>
-                  <Text style={{ fontSize: 12, color: theme.textMuted, marginBottom: 4 }}>
-                    Sync your database assets across remote portals to protect your cloud storage space.
-                  </Text>
-                  <TouchableOpacity activeOpacity={0.85} onPress={handleLinkAccount} style={[styles.linkBtn, { backgroundColor: theme.accent, borderColor: theme.accent }]}>
-                    <Text style={{ color: theme.bg2, fontWeight: '800', fontSize: 13 }}>Verify Google Profile</Text>
-                  </TouchableOpacity>
+              <View style={[styles.settingBlock, { backgroundColor: theme.bg, borderColor: theme.accent }]}>
+                <View style={styles.settingHeader}>
+                  <Text style={{ fontSize: 16 }}>🧹</Text>
+                  <Text style={[styles.settingText, { color: theme.text }]}>Clear your local data</Text>
                 </View>
-              ) : (
-                <View style={[styles.settingBlock, { backgroundColor: theme.bg, borderColor: theme.border }]}>
-                  <View style={styles.settingHeader}>
-                    <Text style={{ fontSize: 16 }}>🛡️</Text>
-                    <Text style={[styles.settingText, { color: theme.text }]}>Verified Cloud Account</Text>
-                  </View>
-                  <Text style={{ fontSize: 12, color: theme.textMuted }}>
-                    Secure core connected as: <Text style={{ color: theme.accent, fontWeight: '600' }}>{currentUser?.email}</Text>
-                  </Text>
-                </View>
-              )}
+                <Text style={{ fontSize: 12, color: theme.textMuted, marginBottom: 4 }}>
+                  Remove your saved profile details and app preferences from this device.
+                </Text>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    Alert.alert('Clear user data', 'Remove your local profile and preferences on this device?', [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Clear', style: 'destructive', onPress: handleClearUserData }
+                    ]);
+                  }}
+                  style={[styles.linkBtn, { backgroundColor: theme.accent, borderColor: theme.accent }]}
+                >
+                  <Text style={{ color: theme.bg2, fontWeight: '800', fontSize: 13 }}>Clear user data</Text>
+                </TouchableOpacity>
+              </View>
 
               {/* Dynamic Theme Environment Matrix List Grid Grid Layout */}
               <View style={[styles.settingBlock, { backgroundColor: 'transparent', borderColor: theme.border }]}>
@@ -370,18 +303,6 @@ const NSTC = () => {
                 </Animated.View>
               </View>
 
-              <TouchableOpacity 
-                activeOpacity={0.85} 
-                onPress={() => {
-                  Alert.alert("Logout & Reset", "Remove local cache and reset profile?", [
-                    { text: "Back", style: "cancel" },
-                    { text: "Logout", style: "destructive", onPress: handleLogoutAndReset }
-                  ]);
-                }} 
-                style={[styles.dangerBtn, { borderColor: theme.textDim, backgroundColor: theme.bg2 }]}
-              >
-                <Text style={[styles.dangerText, { color: theme.text }]}>Logout & Reset</Text>
-              </TouchableOpacity>
             </ScrollView>
           </View>
         </View>

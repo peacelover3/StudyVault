@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, NativeScrollEvent, NativeSyntheticEvent, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
-import { useGoogleAuth } from '../GoogleAuth'; 
-import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
-import { requestAppNotificationsPermission } from '../utils/NotificationManager'; // Imported and ready
+import { requestAppNotificationsPermission } from '../utils/NotificationManager';
 
 export const OnboardingScreen = () => {
   const { theme, themeMode, setThemeMode, completeOnboarding } = useTheme();
@@ -12,9 +9,6 @@ export const OnboardingScreen = () => {
   const [name, setName] = useState('');
   const [policyRead, setPolicyRead] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const { signInWithGoogle } = useGoogleAuth();
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
@@ -35,29 +29,6 @@ export const OnboardingScreen = () => {
       setStep(3); 
     } else if (step === 3) {
       setStep(4); 
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const user = await signInWithGoogle(themeMode);
-      if (user) {
-        await firestore().collection('users').doc(user.uid).set({
-          customName: name.trim(),
-          accountType: 'Authorized Member'
-        }, { merge: true });
-
-        setStep(4); 
-      } else {
-        setError('Google authentication was interrupted. Try again.');
-      }
-    } catch (err: any) {
-      console.error('Auth error caught:', err);
-      setError(err.message || 'Something went wrong during sign in.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -130,20 +101,8 @@ export const OnboardingScreen = () => {
 
       {step === 3 && (
         <View style={styles.stepWrapper}>
-          <Text style={[styles.title, { color: theme.text }]}>Connecting your account.</Text>
-          <Text style={[styles.subtitle, { color: theme.textMuted }]}>Google account connection takes some time.</Text>
-          
-          {loading ? (
-            <ActivityIndicator size="large" color={theme.accent} style={{ marginVertical: 30 }} />
-          ) : (
-            <TouchableOpacity  delayPressIn={0} delayPressOut={0}
-              activeOpacity={0.85}
-              style={[styles.authProviderBtn, { backgroundColor: theme.accent }]}
-              onPress={handleGoogleAuth}
-            >
-              <Text style={[styles.authBtnText, { color: theme.bg }]}>Connect with Google</Text>
-            </TouchableOpacity>
-          )}
+          <Text style={[styles.title, { color: theme.text }]}>StudyVault, your calm study sidekick.</Text>
+          <Text style={[styles.subtitle, { color: theme.textMuted }]}>We help you stay focused with a simple workspace, a smart assistant, and a clean place to keep your plans together.</Text>
         </View>
       )}
 
@@ -222,33 +181,34 @@ By clicking "Get Started" below, you confirm that you have read and understood t
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <View style={styles.btnRow}>
-        {step > 1 && step !== 3 && ( 
-          <TouchableOpacity 
-           delayPressIn={0} delayPressOut={0}
+        {step > 1 && (
+          <TouchableOpacity
+            delayPressIn={0}
+            delayPressOut={0}
             activeOpacity={0.85}
-            onPress={() => setStep(step - 1)} 
+            onPress={() => setStep(step - 1)}
             style={[styles.backBtn, { borderColor: theme.border }]}
           >
             <Text style={{ color: theme.textMuted, fontWeight: '700' }}>Back</Text>
           </TouchableOpacity>
         )}
-        
-        {step !== 3 && ( 
-          <TouchableOpacity  delayPressIn={0} delayPressOut={0}
-            activeOpacity={0.85}
-            onPress={step === 4 ? handleFinish : nextStep} 
-            style={[styles.actionBtn, { backgroundColor: theme.accent, flex: step === 1 ? 1 : 2 }]}
-          >
-            <Text style={[styles.actionText, { color: theme.bg }]}>
-              {step === 4 ? 'Get Started' : 'Continue'}
-            </Text>
-          </TouchableOpacity>
-        )}
+
+        <TouchableOpacity
+          delayPressIn={0}
+          delayPressOut={0}
+          activeOpacity={0.85}
+          onPress={step === 4 ? handleFinish : nextStep}
+          style={[styles.actionBtn, { backgroundColor: theme.accent, flex: step === 1 ? 1 : 2 }]}
+        >
+          <Text style={[styles.actionText, { color: theme.bg }]}> 
+            {step === 4 ? 'Get Started' : 'Continue'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
-    </View>
-  );
-};
+      </View>
+    );
+  };
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 28, justifyContent: 'space-between', paddingVertical: 60 },
