@@ -30,7 +30,7 @@ export const scheduleInvisibleSalahReminders = async (currentUser: any) => {
 
     await notifee.cancelAllNotifications();
 
-    let lat = 33.6844; // Perfect fallback to Islamabad coordinates
+    let lat = 33.6844; // Perfect fallback to Islamabad coordinatessgsgsgsd
     let lon = 73.0479;
     let city = 'Pakistan (Fallback)';
     let ip = 'Hidden';
