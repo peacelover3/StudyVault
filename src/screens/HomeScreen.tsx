@@ -6,7 +6,7 @@ const STUDY_LINKS = [
     { id: '1', title: 'ParhloBhai', desc: 'A Website for all students to study and get notes.', url: 'https://parhlobhai.vercel.app/' },
     { id: '2', title: 'Exametric', desc: 'A resource hub for all NSTC subjects. AI assisted learning with free guides and resources.', url: 'https://exametric.netlify.app' },
     // { id: '3', title: 'MathJack', desc: 'MathJack is a live-grading Olympiad mathematics contest platform. It is a training platform for NMTC and Olympiads including IMO, APMO, BMO, USAMO.', url: 'https://mathjack.org' }, // 🚀 Fixed protocol scheme prefix
-    { id: '3', title: 'Islamic Writings', desc: 'Completely un-related to school, but a good resoure to understand about islam and culture.', url: 'https://peaceprojection.netlify.app/' },
+    { id: '3', title: 'Islamic Writings', desc: 'Completely un-related to school, but a good resoure to understand about islam and culture.', url: 'https://peaceprojection.org/' },
     { id: '4', title: 'Coming Soon', desc: 'What resources should we add here? Submit your suggestions!', url: null },
 ];
 
